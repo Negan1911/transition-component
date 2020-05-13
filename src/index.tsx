@@ -1,22 +1,25 @@
 import * as React from 'react'
-import { CSSTransition } from 'react-transition-group'
+import { CSSTransition as ReactCSSTransition } from 'react-transition-group'
 
 type Context = {
-  shouldTransition: boolean
   parent: {
-    isInitialRender?: boolean
     show?: boolean
     appear?: boolean
+    isInitialRender?: boolean
   }
 }
 
-const TransitionContext = React.createContext<Context>({
-  parent: {},
-  shouldTransition: true
-})
+const TransitionContext = React.createContext<Context>({ parent: {} })
+
+function useIsInitialRender() {
+  const isInitialRender = React.useRef(true)
+  React.useEffect(() => {
+    isInitialRender.current = false
+  }, [])
+  return isInitialRender.current
+}
 
 type Props = {
-  timeout?: number
   show?: boolean
   appear?: boolean
   enter?: string
@@ -28,8 +31,7 @@ type Props = {
   children: React.ReactNode
 }
 
-export function Transition({
-  timeout,
+function CSSTransition({
   show,
   enter = '',
   enterFrom = '',
@@ -55,71 +57,66 @@ export function Transition({
     classes.length && node.classList.remove(...classes)
   }
 
-  const { parent, shouldTransition } = React.useContext<Context>(
-    TransitionContext
+  return (
+    <ReactCSSTransition
+      appear={appear}
+      unmountOnExit
+      in={show}
+      addEndListener={(node, done) => {
+        node.addEventListener('transitionend', done, false)
+      }}
+      onEnter={node => {
+        addClasses(node, [...enterClasses, ...enterFromClasses])
+      }}
+      onEntering={node => {
+        removeClasses(node, enterFromClasses)
+        addClasses(node, enterToClasses)
+      }}
+      onEntered={node => {
+        removeClasses(node, [...enterToClasses, ...enterClasses])
+      }}
+      onExit={node => {
+        addClasses(node, [...leaveClasses, ...leaveFromClasses])
+      }}
+      onExiting={node => {
+        removeClasses(node, leaveFromClasses)
+        addClasses(node, leaveToClasses)
+      }}
+      onExited={node => {
+        removeClasses(node, [...leaveToClasses, ...leaveClasses])
+      }}
+    >
+      {children}
+    </ReactCSSTransition>
   )
-  const mounted = React.useRef(false)
-  React.useEffect(() => {
-    mounted.current = true
-  }, [])
+}
 
-  const isParent = show !== undefined
-  const isChild = !isParent
-  const isInitialRender = mounted.current === false
-  let entranceTransitionsEnabled =
-    parent.isInitialRender && parent.show && !parent.appear ? false : true
+export function Transition({ show, appear, ...rest }: Props) {
+  const { parent } = React.useContext<Context>(TransitionContext)
+  const isInitialRender = useIsInitialRender()
+  const isChild = show === undefined
 
-  let childTransitionsEnabled = isParent
-    ? isInitialRender && show && !appear
-      ? false
-      : true
-    : shouldTransition
+  if (isChild) {
+    return (
+      <CSSTransition
+        appear={parent.appear || !parent.isInitialRender}
+        show={parent.show}
+        {...rest}
+      />
+    )
+  }
 
   return (
     <TransitionContext.Provider
       value={{
-        shouldTransition: childTransitionsEnabled,
         parent: {
           show,
           isInitialRender,
-          appear: isChild ? entranceTransitionsEnabled : appear
+          appear
         }
       }}
     >
-      <CSSTransition
-        appear={isChild ? entranceTransitionsEnabled : appear}
-        unmountOnExit
-        in={isChild ? parent.show : show}
-        addEndListener={(node, done) => {
-          if (timeout) {
-            setTimeout(done, timeout)
-            return
-          }
-          node.addEventListener('transitionend', done, false)
-        }}
-        onEnter={node => {
-          addClasses(node, [...enterClasses, ...enterFromClasses])
-        }}
-        onEntering={node => {
-          removeClasses(node, enterFromClasses)
-          addClasses(node, enterToClasses)
-        }}
-        onEntered={node => {
-          removeClasses(node, [...enterToClasses, ...enterClasses])
-        }}
-        onExit={node => {
-          addClasses(node, [...leaveClasses, ...leaveFromClasses])
-        }}
-        onExiting={node => {
-          removeClasses(node, leaveFromClasses)
-          addClasses(node, leaveToClasses)
-        }}
-        onExited={node => {
-          removeClasses(node, [...leaveToClasses, ...leaveClasses])
-        }}
-      >
-        {children}
-      </CSSTransition>
+      <CSSTransition appear={appear} show={show} {...rest} />
     </TransitionContext.Provider>
   )
 }

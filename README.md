@@ -6,7 +6,6 @@ Utility for easily apply transitions on React. All the credit belongs to [Adam W
 |---      |---                  |---                                |
 | show    | Boolean (optional)  |  Toggle between show/hide state   |
 | appear  | Boolean (optional)  |  By default the child component does not perform the enter transition when it first mounts, regardless of the value of in. If you want this behavior, set both appear and in to true. |
-| timeout | Number (optional)   | Apply timeout to the transitions  |
 | children | **ReactNode**      | Children to apply the classes and transitions. |
 | enter     | String (optional) | Classes to apply on enter         |
 | enterFrom | String (optional) | Classes to apply on enter start   |
@@ -17,8 +16,8 @@ Utility for easily apply transitions on React. All the credit belongs to [Adam W
 -----
 
 
-## Usage:
-```jsx
+## Usage (single animation):
+```tsx
 import { Transition } from 'transition-component'
 
 
@@ -45,6 +44,45 @@ export default () => {
   >
     <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg">
       ...
+    </div>
+  </Transition>
+}
+```
+
+## Usage (multiple animation):
+```tsx
+import { Transition } from 'transition-component'
+
+
+export default () => {
+  const [isOpen, setIsOpen] = useState(false)
+
+  <Transition show={isOpen}>
+    {/* Shared parent */}
+    <div>
+      {/* Background overlay */}
+      <Transition
+        enter="transition-opacity ease-linear duration-300"
+        enterFrom="opacity-0"
+        enterTo="opacity-100"
+        leave="transition-opacity ease-linear duration-300"
+        leaveFrom="opacity-100"
+        leaveTo="opacity-0"
+      >
+        {/* ... */}
+      </Transition>
+
+      {/* Sliding sidebar */}
+      <Transition
+        enter="transition ease-in-out duration-300 transform"
+        enterFrom="-translate-x-full"
+        enterTo="translate-x-0"
+        leave="transition ease-in-out duration-300 transform"
+        leaveFrom="translate-x-0"
+        leaveTo="-translate-x-full"
+      >
+        {/* ... */}
+      </Transition>
     </div>
   </Transition>
 }
