@@ -1,6 +1,9 @@
 # Transition Component
 Utility for easily apply transitions on React. All the credit belongs to [Adam Wathan](https://github.com/adamwathan/tailwind-ui-navbar-react/blob/master/components/Transition.js). I just wrote an API around his code.
 
+## Deprecated
+This project has been deprecated, use [@tailwindui/react](http://npmjs.com/package/@tailwindui/react)
+
 ## Props
 | Name    | Type                | Desc                              |
 |---      |---                  |---                                |
